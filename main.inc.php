@@ -15,6 +15,13 @@ See LICENSE.TXT for details.
 vim: expandtab sw=4 ts=4 sts=4:
 **********************************************************************/
 
+if (PHP_MAJOR_VERSION >= 7) {
+    set_error_handler(function ($errno, $errstr) {
+       return strpos($errstr, 'Declaration of') === 0;
+    }, E_WARNING);
+}
+
+
 #Disable direct access.
 if(isset($_SERVER['SCRIPT_NAME'])
         && !strcasecmp(basename($_SERVER['SCRIPT_NAME']),basename(__FILE__)))
