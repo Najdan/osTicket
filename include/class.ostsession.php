@@ -201,6 +201,9 @@ extends SessionBackend {
         catch (OrmException $e) {
             return false;
         }
+        if(!is_string($this->data->session_data)) {
+            $this->data->session_data = strval($this->data->session_data);
+        }
         return $this->data->session_data;
     }
 
