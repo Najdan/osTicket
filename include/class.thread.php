@@ -1723,6 +1723,42 @@ implements TemplateVariable {
     static function getTypes() {
         return self::$types;
     }
+
+    public function getThreadApiEntity() {
+        //Change this to utilize the "osticket" way of doing so
+        $name=$this->getPoster();
+        if($uId=$this->getUserId()) {
+            $user=['type'=>'user','id'=>$id,'name'=>$name];
+        }
+        elseif($uId=$this->getStaffId()){
+            $user=['type'=>'staff','id'=>$id,'name'=>$name];
+        }
+        elseif($name='SYSTEM'){
+            $user=['type'=>'system','id'=>null,'name'=>null];
+        }
+        else {
+            $user=['type'=>'unknown','id'=>null,'name'=>$name];
+        }
+        return [
+            "id" => $this->getId(),
+            "pid" => $this->getPid(),
+            "thread_id" => $this->getThreadId(),
+            //"type" => $this->getType(),
+            "getTypeName" => $this->getTypeName(),
+            "editor" => $this-> getEditor(),
+            "source" => $this-> getSource(),
+            "format" => $this-> format,
+            "title" => $this->getTitle(),
+            "message"=> $this->getBody()->getClean(),
+            //"message"=>$this->getMessage(),
+            "attachmentUrls"=>$this->getAttachmentUrls(),
+            "timestampes"=>[
+                "created"=> $this->created ,
+                "updated" => $this->updated,
+            ],
+            "user"=>$user,
+        ];
+    }
 }
 
 RolePermission::register(/* @trans */ 'Tickets', ThreadEntry::getPermissions());

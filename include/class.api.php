@@ -71,6 +71,29 @@ class API {
         return ($this->ht['can_create_tickets']);
     }
 
+    //Potentially future add ability to configure in gui.
+    function canViewTickets() {
+        return true;
+    }
+    function canUpdateTickets() {
+        return $this->canCreateTickets();
+    }
+    function canCloseTickets() {
+        return $this->canCreateTickets();
+    }
+    function canReopenTickets() {
+        return $this->canCreateTickets();
+    }
+    function canPostReplyToTickets() {
+        return $this->canCreateTickets();
+    }
+    function canViewTopics() {
+        return true;
+    }
+    function canAddUser() {
+        return true;
+    }
+
     function canExecuteCron() {
         return ($this->ht['can_exec_cron']);
     }
@@ -289,6 +312,7 @@ class ApiController {
     function exerr($code, $error='') {
         global $ost;
 
+        $errors=(array)$error;
         if($error && is_array($error))
             $error = Format::array_implode(": ", "\n", $error);
 
@@ -302,7 +326,7 @@ class ApiController {
             fwrite(STDERR, "({$code}) $error\n");
         }
         else {
-            $this->response($code, $error); //Responder should exit...
+            $this->response($code, json_encode(['message'=>implode(', ',$errors)])); //Responder should exit...
         }
         return false;
     }
