@@ -14,6 +14,12 @@
     vim: expandtab sw=4 ts=4 sts=4:
 **********************************************************************/
 
+if (PHP_MAJOR_VERSION >= 7) {
+    set_error_handler(function ($errno, $errstr) {
+       return strpos($errstr, 'Declaration of') === 0;
+    }, E_WARNING);
+}
+
 #inits - error reporting.
 $error_reporting = E_ALL & ~E_NOTICE;
 if (defined('E_STRICT')) # 5.4.0

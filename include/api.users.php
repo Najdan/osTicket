@@ -2,6 +2,17 @@
 include_once INCLUDE_DIR.'class.api.php';
 include_once INCLUDE_DIR.'class.user.php';
 class UserApiController extends ApiController {
+
+    # Copied from TicketApiController.  Not fully implemented
+    function getRequestStructure($format, $data=null) {
+        return ["phone", "notes", "name", "email","password", "timezone"];
+    }
+    # Copied from TicketApiController.  Not implemented
+    function validate(&$data, $format, $strict=true) {
+        //Add as applicable.
+        return true;
+    }
+
     public function create(string $format):Response {
         //see ajax.users.php addUser() and class.api.php for example
         if(!($key=$this->requireApiKey()) || !$key->canAddUser())

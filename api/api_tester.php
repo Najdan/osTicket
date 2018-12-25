@@ -3,7 +3,7 @@ session_start();
 $emailPostfix=$_SESSION['emailPostfix']??rand(0,99999);
 $_SESSION['emailPostfix']=$emailPostfix+1;
 $email="johndoe{$emailPostfix}@apitester.com";
-$email="johndoe137@apitester.com";
+//$email="johndoe137@apitester.com";
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -18,9 +18,9 @@ $email="johndoe137@apitester.com";
         <script>
             var email='<?php echo($email);?>',
             staffUserName='Michael',
-            userId=112,             //Optional, else newly created user will be used for future tests.
-            ticketNumber=143514,   //Optional, else newly created ticket will be used for future tests.
-            api='1C079F2608AEDC905D4E01EDD064F351'; //'BA945313012AC23048AEB53BF5B8C280';
+            userId, //=112,             //Optional, else newly created user will be used for future tests.
+            ticketNumber,   //=143514,   //Optional, else newly created ticket will be used for future tests.
+            api='E5C00E92AC5D5EF8706E79201F6A0AAF';
 
             var output=document.getElementById('output');
 
@@ -49,11 +49,6 @@ $email="johndoe137@apitester.com";
             }
 
             function startTest() {
-                console.log(ticketNumber, staffUserName, userId, email);
-                testApi('Get Ticket using ticket ID and user email', 'GET', '/api/tickets.json/'+ticketNumber);
-                testApi('Update Ticket using user email', 'PUT', '/api/tickets.json/'+ticketNumber, {email: email, "message": "My updated message using email"});
-                testApi('Get Ticket using ticket ID and user email', 'GET', '/api/tickets.json/'+ticketNumber);
-                return false;
                 //user endpoints
                 //Create first in this test so that new user can be used in future tests.
                 var userData={

@@ -48,7 +48,7 @@ class TicketApiController extends ApiController {
 
             $supported['attachments']['*'][] = 'cid';
         }
-
+        $supported[]='userId';  //Just done to supress log warnings.  Figure out the "right" way to do this.
         return $supported;
     }
 
