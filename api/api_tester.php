@@ -88,7 +88,6 @@ $email="johndoe{$emailPostfix}@apitester.com";
                 ticketData.userId=userId;
                 delete ticketData.email;
                 testApi('Create Ticket using user ID', 'POST', '/api/tickets.json', ticketData);
-
                 testApi('Close Ticket using user email', 'DELETE', '/api/tickets.json/'+ticketNumber, {email: email});
                 testApi('Reopen Ticket using user email', 'POST', '/api/tickets.json/'+ticketNumber, {email: email});
                 testApi('Close Ticket using user ID', 'DELETE', '/api/tickets.json/'+ticketNumber, {userId: userId});
@@ -97,8 +96,9 @@ $email="johndoe{$emailPostfix}@apitester.com";
                 testApi('Update Ticket using user ID', 'PUT', '/api/tickets.json/'+ticketNumber, {userId: userId, "message": "My updated message using userId"});
                 testApi('Get Ticket using ticket ID and user email', 'GET', '/api/tickets.json/'+ticketNumber);
                 testApi('Get Ticket using ticket ID and user Id', 'GET', '/api/tickets.json/'+ticketNumber);
-
                 testApi('Get Topics', 'GET', '/api/topics.json');
+                testApi('DELETE User', 'DELETE', '/api/scp/users.json/'+userId);
+
             }
 
             if(error=startTest()){

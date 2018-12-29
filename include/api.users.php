@@ -42,4 +42,14 @@ class UserApiController extends ApiController {
         $this->response(201, json_encode($user->getUserApiEntity()));
         //$this->response(201, $user->to_json());
     }
+
+    public function delete(string $format, int $uid):Response {
+        if(!($key=$this->requireApiKey()) || !$key->canDeleteUser())
+            return $this->exerr(401, __('API key not authorized'));
+        if(!$user = User::lookup($uid))
+            return $this->exerr(400, __("User ID '$uid' does not exist"));
+        $user->deleteAllTickets();
+        $user->delete();
+        $this->response(204, null);
+    }
 }

@@ -188,12 +188,12 @@ class TicketApiController extends ApiController {
     // Private methods to support new api methods.  Verify if existing osTicket methods should be used instead.
     private function getByTicketId(int $ticketId):Ticket {
         if(!$pk=Ticket::getIdByNumber($ticketId))
-            return $this->exerr(400, __("Ticket ID does not exist"));
+            return $this->exerr(400, __("Ticket Number '$ticketId' does not exist"));
         return $this->getByPrimaryId($pk);
     }
     private function getByPrimaryId(int $pk):Ticket {
         if(!$ticket = Ticket::lookup($pk))
-            return $this->exerr(400, __("Ticket ID does not exist"));
+            return $this->exerr(400, __("Ticket ID '$pk' does not exist"));
         return $ticket;
     }
     private function getUser($params=[]):EndUser {

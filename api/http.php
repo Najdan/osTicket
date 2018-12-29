@@ -36,6 +36,7 @@ $dispatcher = patterns('',
 
         //Added User Endpoints
         url_post("^/scp/users\.(?P<format>xml|json)$", array('api.users.php:UserApiController','create')),
+        url_delete("^/scp/users\.(?P<format>xml|json)/(?P<uid>\d+)$", array('api.users.php:UserApiController','delete')),
 
         url('^/tasks/', patterns('',
                 url_post("^cron$", array('api.cron.php:CronApiController', 'execute'))
@@ -44,6 +45,10 @@ $dispatcher = patterns('',
 
 Signal::send('api', $dispatcher);
 
+//Change to only add staff for /scp API endpoints.  Needed to change ticket status so that user can be deleted.
+$thisstaff = new ApiUser();
+
 # Call the respective function
 print $dispatcher->resolve($ost->get_path_info());
+
 ?>

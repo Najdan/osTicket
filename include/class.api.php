@@ -93,6 +93,9 @@ class API {
     function canAddUser() {
         return true;
     }
+    function canDeleteUser() {
+        return true;
+    }
 
     function canExecuteCron() {
         return ($this->ht['can_exec_cron']);
@@ -472,6 +475,17 @@ class ApiEmailDataParser extends EmailDataParser {
             unset($data['priorityId']);
 
         return $data;
+    }
+}
+
+class ApiUser extends Staff {   //StaffSession
+    //StaffSession has additional methods: isValid, refreshSession, getSession, getSessionToken, getIP
+    function getRole($dept=null, $assigned=false) {
+        if(!$this->role) {
+            $roles=array_fill_keys(['ticket.create','ticket.delete','ticket.edit','user.create','user.delete','user.edit'],1);    //['user.create','user.delete','user.edit','user.manage','user.dir','org.create','org.delete','org.edit','faq.manage','emails.banlist']
+            $this->role = new Role(['permissions'=>json_encode($roles)]);
+        }
+        return $this->role;
     }
 }
 ?>
