@@ -18,6 +18,7 @@ class UserApiController extends ApiController {
             return $this->exerr(401, __('API key not authorized'));
         if(!$user = User::lookup($uid))
             return $this->exerr(400, __("User ID '$uid' does not exist"));
+        //$this->response(200, $user->toJson());
         $this->response(200, json_encode($user->getUserApiEntity()));
     }
 
@@ -26,12 +27,12 @@ class UserApiController extends ApiController {
         if(!($key=$this->requireApiKey()) || !$key->canAddUser())
             return $this->exerr(401, __('API key not authorized'));
         $params = $this->getRequest($format);
-        //Maybe use osTicket validation methods instead?
-        $params['phone'] = $params['phone'] ?? null;
-        $params=array_intersect_key($params, array_flip($this->getRequestStructure($format)));
+        $params=array_merge(array_fill_keys(["org_id", "phone", "notes", "timezone"],null), $params);  //Optional properties
+        $params=array_intersect_key($params, array_flip($this->getRequestStructure($format)));      //Strip off unused properties
         if ($missing=array_diff($this->getRequestStructure($format), array_keys($params))) {
             return $this->exerr(400, __('Missing parameters '.implode(', ', $missing)));
         }
+
         if (!filter_var($params['email'], FILTER_VALIDATE_EMAIL)) {
             return $this->exerr(400, __("Invalid email: $params[email]"));
         }

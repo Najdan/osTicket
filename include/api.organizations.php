@@ -27,16 +27,13 @@ class OrganizationApiController extends ApiController {
             return $this->exerr(401, __('API key not authorized'));
 
         $params = $this->getRequest($format);
-        if (empty($params['name'])) {
-            return $this->exerr(400, __('Missing organization name'));
-        }
-        if(Organization::lookup(['name'=>$params['name']])) {
-            return $this->exerr(400, __("Organization name $params[name] is already in use"));
-        }
-        $params=array_merge(array_fill_keys($this->getRequestStructure($format),null), $params);
-        $params=array_intersect_key($params, array_flip($this->getRequestStructure($format)));
+        $params=array_merge(array_fill_keys(['address','phone','website','notes'],null), $params);  //Optional properties
+        $params=array_intersect_key($params, array_flip($this->getRequestStructure($format)));      //Strip off unused properties
         if ($missing=array_diff($this->getRequestStructure($format), array_keys($params))) {
             return $this->exerr(400, __('Missing parameters '.implode(', ', $missing)));
+        }
+        if(Organization::lookup(['name'=>$params['name']])) {
+            return $this->exerr(400, __("Organization name '$params[name]' is already in use"));
         }
 
         if(!$org=Organization::fromVars($params)) {
@@ -50,11 +47,27 @@ class OrganizationApiController extends ApiController {
         if(!($key=$this->requireApiKey()) || !$key->canDeleteOrganization())
             return $this->exerr(401, __('API key not authorized'));
         // Organization::objects()->filter(['id__in' => [$oid]])
-        if(!$orgs = Organization::lookup($oid))
+        if(!$org = Organization::lookup($oid))
             return $this->exerr(400, __("Organization ID '$oid' does not exist"));
-        if(!$orgs->delete()){
+        if(!empty($_GET['deleteUsers'])) {  //delete users before deleting organization
+            foreach ($org->allMembers() as $user) {
+                $user->delete();
+            }
+        }
+        if(!$org->delete()){
             return $this->exerr(500, __('Error deleting organization'));
         }
         $this->response(204, null);
+    }
+
+    public function getUsers(string $format, int $oid):Response {
+        if(!($key=$this->requireApiKey()) || !$key->canViewOrganization())
+            return $this->exerr(401, __('API key not authorized'));
+        if(!$org = Organization::lookup($oid))
+            return $this->exerr(400, __("Organization ID '$oid' does not exist"));
+        foreach ($org->allMembers() as $user) {
+            $users[]=$user->getUserApiEntity();
+        }
+        $this->response(200, json_encode($users));
     }
 }

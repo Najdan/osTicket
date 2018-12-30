@@ -4327,7 +4327,7 @@ EOF;
         $status=$this->getStatus();
         $priority=$this->getPriority();
         return [
-            'ticket_number' => $this->getNumber(),
+            'id' => $this->getNumber(),
             'subject' => $this->getSubject(),
             'topic' => ['id' => $topic->getId(), 'name' => $topic->getName()],
             'status' => ['id' => $status->getId(), 'name' => $status->getName()],

@@ -4,13 +4,23 @@ The intent of these changes are to allow a public help desk to be embedded in a 
 
 osTicket currently only allows the creation of a new ticket described by https://docs.osticket.com/en/latest/Developer%20Documentation/API/Tickets.html, and this repository extends osTickets with the following functionality:
 
-1. Display a given users tickets.
-2. Display available topics.
-3. Display a ticket based on a given ticket ID.
-4. Close a ticket.
-5. Reopen a ticket.
-6. Post a reply to an existing ticket.
-7. Create new topic (minor modifications to core method).
+Endpoints utilized by user:
+1. Create ticket (minor modifications to core method).
+2. View ticket.
+3. View given user's tickets.
+4. Close ticket.
+5. Reopen ticket.
+6. Update ticket
+7. Display available topics.
+
+Endpoints utilized by application:
+1. Create user.
+2. View user.
+3. Delete user.
+4. Create organization.
+5. View organization.
+6. Delete organization (and optionally associated users).
+7. View organization's users.
 
 In addition to GET, POST, and DELETE HTTP methods, PUT was added.
 
@@ -41,19 +51,228 @@ PHP Version 7.1.24, Apache/2.4.6, CentOS Linux release 7.5.1804
 1. All ticket methods which change the database require either the user's email (email) or id (user_id).  Only adding a new ticket uses this information to directly insert into the database and the other's use it just to log who made the change.
 
 ## DEMO:
-api/api_tester.html is used to test endpoints using an IDE.  Change the API key, email, and user name to reflect your installation.  Output is as follows:
+api/api_tester.html is used to test endpoints using an IDE.  Change the API key to reflect your installation.  Output is as follows:
 
 ```
-Create User
+Create organization
+POST /api/scp/organizations.json
+
+params:
+
+{
+  "name": "ABC Company",
+  "address": "123 main street",
+  "phone": "4254441212X123",
+  "notes": "Mynotes",
+  "website": "website.com"
+}
+Status: Created (201)
+
+Response:
+
+{
+  "id": 33,
+  "name": "ABC Company"
+}
+
+Create organization with existing name
+POST /api/scp/organizations.json
+
+params:
+
+{
+  "name": "ABC Company",
+  "address": "123 main street",
+  "phone": "4254441212X123",
+  "notes": "Mynotes",
+  "website": "website.com"
+}
+Status: Bad Request (400)
+
+Response:
+
+{
+  "message": "Organization name 'ABC Company' is already in use"
+}
+
+Get organization
+GET /api/scp/organizations.json/33
+
+params:
+
+null
+Status: OK (200)
+
+Response:
+
+{
+  "id": 33,
+  "name": "ABC Company"
+}
+
+Create user
 POST /api/scp/users.json
 
 params:
 
 {
-  "phone": "4254441212X123",
-  "notes": "Mynotes",
-  "name": "john doe",
-  "email": "johndoe66710@apitester.com",
+  "email": "John.Doe@gmail.com",
+  "phone": "(425) 444-1212 X123",
+  "notes": "Some Notes",
+  "name": "John Doe",
+  "password": "thepassword",
+  "timezone": "America/Los_Angeles",
+  "org_id": 33
+}
+Status: Created (201)
+
+Response:
+
+{
+  "id": 101,
+  "name": "John Doe",
+  "email": "John.Doe@gmail.com",
+  "phone": "(425) 444-1212 x123"
+}
+
+Create user with existing email
+POST /api/scp/users.json
+
+params:
+
+{
+  "email": "John.Doe@gmail.com",
+  "phone": "(425) 444-1212 X123",
+  "notes": "Some Notes",
+  "name": "John Doe",
+  "password": "thepassword",
+  "timezone": "America/Los_Angeles",
+  "org_id": 33
+}
+Status: Bad Request (400)
+
+Response:
+
+{
+  "message": "Email John.Doe@gmail.com is already in use"
+}
+
+Create second user
+POST /api/scp/users.json
+
+params:
+
+{
+  "email": "John.Doe_2@gmail.com",
+  "phone": "(425) 444-1212 X123",
+  "notes": "Some Notes",
+  "name": "John Doe",
+  "password": "thepassword",
+  "timezone": "America/Los_Angeles",
+  "org_id": 33
+}
+Status: Created (201)
+
+Response:
+
+{
+  "id": 102,
+  "name": "John Doe",
+  "email": "John.Doe_2@gmail.com",
+  "phone": "(425) 444-1212 x123"
+}
+
+Get organization users
+GET /api/scp/organizations.json/users/33
+
+params:
+
+null
+Status: OK (200)
+
+Response:
+
+[
+  {
+    "id": 101,
+    "name": "John Doe",
+    "email": "John.Doe@gmail.com",
+    "phone": "(425) 444-1212 x123"
+  },
+  {
+    "id": 102,
+    "name": "John Doe",
+    "email": "John.Doe_2@gmail.com",
+    "phone": "(425) 444-1212 x123"
+  }
+]
+
+Delete organization and delete users
+DELETE /api/scp/organizations.json/33
+
+params:
+
+{
+  "deleteUsers": 1
+}
+Status: No Content (204)
+
+Response:
+
+null
+
+Delete organization with invalid ID
+DELETE /api/scp/organizations.json/33
+
+params:
+
+null
+Status: Bad Request (400)
+
+Response:
+
+{
+  "message": "Organization ID '33' does not exist"
+}
+
+Get user with invalid ID
+GET /api/scp/users.json/101
+
+params:
+
+null
+Status: Bad Request (400)
+
+Response:
+
+{
+  "message": "User ID '101' does not exist"
+}
+
+Delete user with invalid ID
+DELETE /api/scp/users.json/101
+
+params:
+
+null
+Status: Bad Request (400)
+
+Response:
+
+{
+  "message": "User ID '101' does not exist"
+}
+
+Create user without an organization
+POST /api/scp/users.json
+
+params:
+
+{
+  "email": "John.Doe@gmail.com",
+  "phone": "(425) 444-1212 X123",
+  "notes": "Some Notes",
+  "name": "John Doe",
   "password": "thepassword",
   "timezone": "America/Los_Angeles"
 }
@@ -62,9 +281,110 @@ Status: Created (201)
 Response:
 
 {
-  "id": 14,
-  "name": "john doe",
-  "email": "johndoe66710@apitester.com",
+  "id": 103,
+  "name": "John Doe",
+  "email": "John.Doe@gmail.com",
+  "phone": "(425) 444-1212 x123"
+}
+
+Delete user
+DELETE /api/scp/users.json/103
+
+params:
+
+null
+Status: No Content (204)
+
+Response:
+
+null
+
+Create organization
+POST /api/scp/organizations.json
+
+params:
+
+{
+  "name": "ABC Company",
+  "address": "123 main street",
+  "phone": "4254441212X123",
+  "notes": "Mynotes",
+  "website": "website.com"
+}
+Status: Created (201)
+
+Response:
+
+{
+  "id": 34,
+  "name": "ABC Company"
+}
+
+Create user
+POST /api/scp/users.json
+
+params:
+
+{
+  "email": "John.Doe@gmail.com",
+  "phone": "(425) 444-1212 X123",
+  "notes": "Some Notes",
+  "name": "John Doe",
+  "password": "thepassword",
+  "timezone": "America/Los_Angeles",
+  "org_id": 34
+}
+Status: Created (201)
+
+Response:
+
+{
+  "id": 104,
+  "name": "John Doe",
+  "email": "John.Doe@gmail.com",
+  "phone": "(425) 444-1212 x123"
+}
+
+Delete organization but do not delete users
+DELETE /api/scp/organizations.json/34
+
+params:
+
+null
+Status: No Content (204)
+
+Response:
+
+null
+
+Get organization with invalid ID
+GET /api/scp/organizations.json/34
+
+params:
+
+null
+Status: Bad Request (400)
+
+Response:
+
+{
+  "message": "Organization ID '34' does not exist"
+}
+
+Get user
+GET /api/scp/users.json/104
+
+params:
+
+null
+Status: OK (200)
+
+Response:
+
+{
+  "id": 104,
+  "name": "John Doe",
+  "email": "John.Doe@gmail.com",
   "phone": "(425) 444-1212 x123"
 }
 
@@ -74,18 +394,18 @@ POST /api/tickets.json
 params:
 
 {
-  "email": "johndoe66710@apitester.com",
   "message": "My original message",
   "name": "John Doe",
   "subject": "Testing API",
-  "topicId": 2
+  "topicId": 2,
+  "userId": 104
 }
 Status: Created (201)
 
 Response:
 
 {
-  "ticket_number": "630051",
+  "id": "784332",
   "subject": "Testing API",
   "topic": {
     "id": 2,
@@ -101,26 +421,26 @@ Response:
   },
   "department": "Support",
   "timestamps": {
-    "create": "2018-12-25 17:47:42",
-    "due": "2018-12-27 17:47:42",
+    "create": "2018-12-30 15:27:05",
+    "due": "2019-01-01 15:27:05",
     "close": null,
-    "last_message": "2018-12-25 17:47:42",
+    "last_message": "2018-12-30 15:27:05",
     "last_response": null
   },
   "user": {
-    "fullname": "john doe",
-    "firstname": "john",
-    "lastname": "doe",
-    "email": "johndoe66710@apitester.com",
+    "fullname": "John Doe",
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "John.Doe@gmail.com",
     "phone": "(425) 444-1212 x123"
   },
   "source": "API",
   "assigned_to": [],
   "threads": [
     {
-      "id": 40,
+      "id": 139,
       "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -130,13 +450,13 @@ Response:
       "message": "My original message",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:42",
+        "created": "2018-12-30 15:27:05",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
+        "name": "John Doe"
       }
     }
   ]
@@ -152,14 +472,14 @@ params:
   "name": "John Doe",
   "subject": "Testing API",
   "topicId": 2,
-  "userId": 14
+  "userId": 104
 }
 Status: Created (201)
 
 Response:
 
 {
-  "ticket_number": "174449",
+  "id": "342966",
   "subject": "Testing API",
   "topic": {
     "id": 2,
@@ -175,26 +495,26 @@ Response:
   },
   "department": "Support",
   "timestamps": {
-    "create": "2018-12-25 17:47:43",
-    "due": "2018-12-27 17:47:43",
+    "create": "2018-12-30 15:27:05",
+    "due": "2019-01-01 15:27:05",
     "close": null,
-    "last_message": "2018-12-25 17:47:43",
+    "last_message": "2018-12-30 15:27:05",
     "last_response": null
   },
   "user": {
-    "fullname": "john doe",
-    "firstname": "john",
-    "lastname": "doe",
-    "email": "johndoe66710@apitester.com",
+    "fullname": "John Doe",
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "John.Doe@gmail.com",
     "phone": "(425) 444-1212 x123"
   },
   "source": "API",
   "assigned_to": [],
   "threads": [
     {
-      "id": 41,
+      "id": 140,
       "pid": 0,
-      "thread_id": 17,
+      "thread_id": 87,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -204,25 +524,65 @@ Response:
       "message": "My original message",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:43",
+        "created": "2018-12-30 15:27:05",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
+        "name": "John Doe"
       }
     }
   ]
 }
 
-Close Ticket using user email
-DELETE /api/tickets.json/630051
+Create Ticket using invalid user email
+POST /api/tickets.json
 
 params:
 
 {
-  "email": "johndoe66710@apitester.com"
+  "message": "My original message",
+  "name": "John Doe",
+  "subject": "Testing API",
+  "topicId": 2,
+  "userId": 102
+}
+Status: Bad Request (400)
+
+Response:
+
+{
+  "message": "Invalid user.  User ID does not exist."
+}
+
+Create Ticket using invalid user ID
+POST /api/tickets.json
+
+params:
+
+{
+  "message": "My original message",
+  "name": "John Doe",
+  "subject": "Testing API",
+  "topicId": 2,
+  "userId": 102
+}
+Status: Bad Request (400)
+
+Response:
+
+{
+  "message": "Invalid user.  User ID does not exist."
+}
+
+Close Ticket using user email
+DELETE /api/tickets.json/784332
+
+params:
+
+{
+  "email": "John.Doe@gmail.com"
 }
 Status: No Content (204)
 
@@ -231,19 +591,19 @@ Response:
 null
 
 Reopen Ticket using user email
-POST /api/tickets.json/630051
+POST /api/tickets.json/784332
 
 params:
 
 {
-  "email": "johndoe66710@apitester.com"
+  "email": "John.Doe@gmail.com"
 }
 Status: OK (200)
 
 Response:
 
 {
-  "ticket_number": "630051",
+  "id": "784332",
   "subject": "Testing API",
   "topic": {
     "id": 2,
@@ -259,26 +619,26 @@ Response:
   },
   "department": "Support",
   "timestamps": {
-    "create": "2018-12-25 17:47:42",
-    "due": "2018-12-27 17:47:44",
-    "close": "2018-12-25 17:47:44",
-    "last_message": "2018-12-25 17:47:42",
+    "create": "2018-12-30 15:27:05",
+    "due": "2019-01-01 15:27:05",
+    "close": null,
+    "last_message": "2018-12-30 15:27:05",
     "last_response": null
   },
   "user": {
-    "fullname": "john doe",
-    "firstname": "john",
-    "lastname": "doe",
-    "email": "johndoe66710@apitester.com",
+    "fullname": "John Doe",
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "John.Doe@gmail.com",
     "phone": "(425) 444-1212 x123"
   },
   "source": "API",
   "assigned_to": [],
   "threads": [
     {
-      "id": 40,
+      "id": 139,
       "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -288,47 +648,25 @@ Response:
       "message": "My original message",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:42",
+        "created": "2018-12-30 15:27:05",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
-      }
-    },
-    {
-      "id": 42,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:43",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
+        "name": "John Doe"
       }
     }
   ]
 }
 
 Close Ticket using user ID
-DELETE /api/tickets.json/630051
+DELETE /api/tickets.json/784332
 
 params:
 
 {
-  "userId": 14
+  "userId": 104
 }
 Status: No Content (204)
 
@@ -337,19 +675,19 @@ Response:
 null
 
 Reopen Ticket using user ID
-POST /api/tickets.json/630051
+POST /api/tickets.json/784332
 
 params:
 
 {
-  "userId": 14
+  "userId": 104
 }
 Status: OK (200)
 
 Response:
 
 {
-  "ticket_number": "630051",
+  "id": "784332",
   "subject": "Testing API",
   "topic": {
     "id": 2,
@@ -365,26 +703,26 @@ Response:
   },
   "department": "Support",
   "timestamps": {
-    "create": "2018-12-25 17:47:42",
-    "due": "2018-12-27 17:47:44",
-    "close": "2018-12-25 17:47:44",
-    "last_message": "2018-12-25 17:47:42",
+    "create": "2018-12-30 15:27:05",
+    "due": "2019-01-01 15:27:05",
+    "close": null,
+    "last_message": "2018-12-30 15:27:05",
     "last_response": null
   },
   "user": {
-    "fullname": "john doe",
-    "firstname": "john",
-    "lastname": "doe",
-    "email": "johndoe66710@apitester.com",
+    "fullname": "John Doe",
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "John.Doe@gmail.com",
     "phone": "(425) 444-1212 x123"
   },
   "source": "API",
   "assigned_to": [],
   "threads": [
     {
-      "id": 40,
+      "id": 139,
       "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -394,69 +732,25 @@ Response:
       "message": "My original message",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:42",
+        "created": "2018-12-30 15:27:05",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
-      }
-    },
-    {
-      "id": 42,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:43",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
-      }
-    },
-    {
-      "id": 43,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:44",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
+        "name": "John Doe"
       }
     }
   ]
 }
 
 Update Ticket using user email
-PUT /api/tickets.json/630051
+PUT /api/tickets.json/784332
 
 params:
 
 {
-  "email": "johndoe66710@apitester.com",
+  "email": "John.Doe@gmail.com",
   "message": "My updated message using email"
 }
 Status: OK (200)
@@ -464,7 +758,7 @@ Status: OK (200)
 Response:
 
 {
-  "ticket_number": "630051",
+  "id": "784332",
   "subject": "Testing API",
   "topic": {
     "id": 2,
@@ -480,26 +774,26 @@ Response:
   },
   "department": "Support",
   "timestamps": {
-    "create": "2018-12-25 17:47:42",
-    "due": "2018-12-27 17:47:44",
-    "close": "2018-12-25 17:47:44",
-    "last_message": "2018-12-25 17:47:45",
+    "create": "2018-12-30 15:27:05",
+    "due": "2019-01-01 15:27:05",
+    "close": null,
+    "last_message": "2018-12-30 15:27:08",
     "last_response": null
   },
   "user": {
-    "fullname": "john doe",
-    "firstname": "john",
-    "lastname": "doe",
-    "email": "johndoe66710@apitester.com",
+    "fullname": "John Doe",
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "John.Doe@gmail.com",
     "phone": "(425) 444-1212 x123"
   },
   "source": "API",
   "assigned_to": [],
   "threads": [
     {
-      "id": 40,
+      "id": 139,
       "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -509,63 +803,19 @@ Response:
       "message": "My original message",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:42",
+        "created": "2018-12-30 15:27:05",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
+        "name": "John Doe"
       }
     },
     {
-      "id": 42,
+      "id": 141,
       "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:43",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
-      }
-    },
-    {
-      "id": 43,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:44",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
-      }
-    },
-    {
-      "id": 44,
-      "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -575,25 +825,25 @@ Response:
       "message": "My updated message using email",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:45",
+        "created": "2018-12-30 15:27:08",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
+        "name": "John Doe"
       }
     }
   ]
 }
 
 Update Ticket using user ID
-PUT /api/tickets.json/630051
+PUT /api/tickets.json/784332
 
 params:
 
 {
-  "userId": 14,
+  "userId": 104,
   "message": "My updated message using userId"
 }
 Status: OK (200)
@@ -601,7 +851,7 @@ Status: OK (200)
 Response:
 
 {
-  "ticket_number": "630051",
+  "id": "784332",
   "subject": "Testing API",
   "topic": {
     "id": 2,
@@ -617,9 +867,9 @@ Response:
   },
   "department": "Support",
   "timestamps": {
-    "create": "2018-12-25 17:47:42",
-    "due": "2018-12-27 17:47:44",
-    "close": "2018-12-25 17:47:44",
+    "create": "2018-12-30 15:27:05",
+    "due": "2019-01-01 15:27:05",
+    "close": null,
     "last_message": {
       "alias": null,
       "func": "NOW",
@@ -628,19 +878,19 @@ Response:
     "last_response": null
   },
   "user": {
-    "fullname": "john doe",
-    "firstname": "john",
-    "lastname": "doe",
-    "email": "johndoe66710@apitester.com",
+    "fullname": "John Doe",
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "John.Doe@gmail.com",
     "phone": "(425) 444-1212 x123"
   },
   "source": "API",
   "assigned_to": [],
   "threads": [
     {
-      "id": 40,
+      "id": 139,
       "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -650,63 +900,19 @@ Response:
       "message": "My original message",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:42",
+        "created": "2018-12-30 15:27:05",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
+        "name": "John Doe"
       }
     },
     {
-      "id": 42,
+      "id": 141,
       "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:43",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
-      }
-    },
-    {
-      "id": 43,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:44",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
-      }
-    },
-    {
-      "id": 44,
-      "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -716,19 +922,19 @@ Response:
       "message": "My updated message using email",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:45",
+        "created": "2018-12-30 15:27:08",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
+        "name": "John Doe"
       }
     },
     {
-      "id": 45,
+      "id": 142,
       "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -738,20 +944,400 @@ Response:
       "message": "My updated message using userId",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:45",
+        "created": "2018-12-30 15:27:08",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
+        "name": "John Doe"
       }
     }
   ]
 }
 
-Get Ticket using ticket ID and user email
-GET /api/tickets.json/630051
+Update Ticket using invalid user email
+PUT /api/tickets.json/784332
+
+params:
+
+{
+  "email": "John.Doe_2@gmail.com",
+  "message": "My updated message using email"
+}
+Status: Bad Request (400)
+
+Response:
+
+{
+  "message": "Invalid user.  User email does not exist."
+}
+
+Update Ticket using invalid user user ID
+PUT /api/tickets.json/784332
+
+params:
+
+{
+  "userId": 102,
+  "message": "My updated message using userId"
+}
+Status: Bad Request (400)
+
+Response:
+
+{
+  "message": "Invalid user.  User ID does not exist."
+}
+
+Get Tickets using user email
+GET /api/tickets.json
+
+params:
+
+{
+  "email": "John.Doe@gmail.com"
+}
+Status: OK (200)
+
+Response:
+
+[
+  {
+    "id": "784332",
+    "subject": "Testing API",
+    "topic": {
+      "id": 2,
+      "name": "Feedback"
+    },
+    "status": {
+      "id": 1,
+      "name": "Open"
+    },
+    "priority": {
+      "id": 1,
+      "name": "low"
+    },
+    "department": "Support",
+    "timestamps": {
+      "create": "2018-12-30 15:27:05",
+      "due": "2019-01-01 15:27:05",
+      "close": null,
+      "last_message": "2018-12-30 15:27:08",
+      "last_response": null
+    },
+    "user": {
+      "fullname": "John Doe",
+      "firstname": "John",
+      "lastname": "Doe",
+      "email": "John.Doe@gmail.com",
+      "phone": "(425) 444-1212 x123"
+    },
+    "source": "API",
+    "assigned_to": [],
+    "threads": [
+      {
+        "id": 139,
+        "pid": 0,
+        "thread_id": 86,
+        "type": "M",
+        "typeName": "message",
+        "editor": null,
+        "source": "api",
+        "format": "text",
+        "title": "Testing API",
+        "message": "My original message",
+        "attachmentUrls": [],
+        "timestampes": {
+          "created": "2018-12-30 15:27:05",
+          "updated": "0000-00-00 00:00:00"
+        },
+        "user": {
+          "type": "user",
+          "id": null,
+          "name": "John Doe"
+        }
+      },
+      {
+        "id": 141,
+        "pid": 0,
+        "thread_id": 86,
+        "type": "M",
+        "typeName": "message",
+        "editor": null,
+        "source": "",
+        "format": "text",
+        "title": null,
+        "message": "My updated message using email",
+        "attachmentUrls": [],
+        "timestampes": {
+          "created": "2018-12-30 15:27:08",
+          "updated": "0000-00-00 00:00:00"
+        },
+        "user": {
+          "type": "user",
+          "id": null,
+          "name": "John Doe"
+        }
+      },
+      {
+        "id": 142,
+        "pid": 0,
+        "thread_id": 86,
+        "type": "M",
+        "typeName": "message",
+        "editor": null,
+        "source": "",
+        "format": "text",
+        "title": null,
+        "message": "My updated message using userId",
+        "attachmentUrls": [],
+        "timestampes": {
+          "created": "2018-12-30 15:27:08",
+          "updated": "0000-00-00 00:00:00"
+        },
+        "user": {
+          "type": "user",
+          "id": null,
+          "name": "John Doe"
+        }
+      }
+    ]
+  },
+  {
+    "id": "342966",
+    "subject": "Testing API",
+    "topic": {
+      "id": 2,
+      "name": "Feedback"
+    },
+    "status": {
+      "id": 1,
+      "name": "Open"
+    },
+    "priority": {
+      "id": 1,
+      "name": "low"
+    },
+    "department": "Support",
+    "timestamps": {
+      "create": "2018-12-30 15:27:05",
+      "due": "2019-01-01 15:27:05",
+      "close": null,
+      "last_message": "2018-12-30 15:27:05",
+      "last_response": null
+    },
+    "user": {
+      "fullname": "John Doe",
+      "firstname": "John",
+      "lastname": "Doe",
+      "email": "John.Doe@gmail.com",
+      "phone": "(425) 444-1212 x123"
+    },
+    "source": "API",
+    "assigned_to": [],
+    "threads": [
+      {
+        "id": 140,
+        "pid": 0,
+        "thread_id": 87,
+        "type": "M",
+        "typeName": "message",
+        "editor": null,
+        "source": "api",
+        "format": "text",
+        "title": "Testing API",
+        "message": "My original message",
+        "attachmentUrls": [],
+        "timestampes": {
+          "created": "2018-12-30 15:27:05",
+          "updated": "0000-00-00 00:00:00"
+        },
+        "user": {
+          "type": "user",
+          "id": null,
+          "name": "John Doe"
+        }
+      }
+    ]
+  }
+]
+
+Get Tickets using user ID
+GET /api/tickets.json
+
+params:
+
+{
+  "userId": 104
+}
+Status: OK (200)
+
+Response:
+
+[
+  {
+    "id": "784332",
+    "subject": "Testing API",
+    "topic": {
+      "id": 2,
+      "name": "Feedback"
+    },
+    "status": {
+      "id": 1,
+      "name": "Open"
+    },
+    "priority": {
+      "id": 1,
+      "name": "low"
+    },
+    "department": "Support",
+    "timestamps": {
+      "create": "2018-12-30 15:27:05",
+      "due": "2019-01-01 15:27:05",
+      "close": null,
+      "last_message": "2018-12-30 15:27:08",
+      "last_response": null
+    },
+    "user": {
+      "fullname": "John Doe",
+      "firstname": "John",
+      "lastname": "Doe",
+      "email": "John.Doe@gmail.com",
+      "phone": "(425) 444-1212 x123"
+    },
+    "source": "API",
+    "assigned_to": [],
+    "threads": [
+      {
+        "id": 139,
+        "pid": 0,
+        "thread_id": 86,
+        "type": "M",
+        "typeName": "message",
+        "editor": null,
+        "source": "api",
+        "format": "text",
+        "title": "Testing API",
+        "message": "My original message",
+        "attachmentUrls": [],
+        "timestampes": {
+          "created": "2018-12-30 15:27:05",
+          "updated": "0000-00-00 00:00:00"
+        },
+        "user": {
+          "type": "user",
+          "id": null,
+          "name": "John Doe"
+        }
+      },
+      {
+        "id": 141,
+        "pid": 0,
+        "thread_id": 86,
+        "type": "M",
+        "typeName": "message",
+        "editor": null,
+        "source": "",
+        "format": "text",
+        "title": null,
+        "message": "My updated message using email",
+        "attachmentUrls": [],
+        "timestampes": {
+          "created": "2018-12-30 15:27:08",
+          "updated": "0000-00-00 00:00:00"
+        },
+        "user": {
+          "type": "user",
+          "id": null,
+          "name": "John Doe"
+        }
+      },
+      {
+        "id": 142,
+        "pid": 0,
+        "thread_id": 86,
+        "type": "M",
+        "typeName": "message",
+        "editor": null,
+        "source": "",
+        "format": "text",
+        "title": null,
+        "message": "My updated message using userId",
+        "attachmentUrls": [],
+        "timestampes": {
+          "created": "2018-12-30 15:27:08",
+          "updated": "0000-00-00 00:00:00"
+        },
+        "user": {
+          "type": "user",
+          "id": null,
+          "name": "John Doe"
+        }
+      }
+    ]
+  },
+  {
+    "id": "342966",
+    "subject": "Testing API",
+    "topic": {
+      "id": 2,
+      "name": "Feedback"
+    },
+    "status": {
+      "id": 1,
+      "name": "Open"
+    },
+    "priority": {
+      "id": 1,
+      "name": "low"
+    },
+    "department": "Support",
+    "timestamps": {
+      "create": "2018-12-30 15:27:05",
+      "due": "2019-01-01 15:27:05",
+      "close": null,
+      "last_message": "2018-12-30 15:27:05",
+      "last_response": null
+    },
+    "user": {
+      "fullname": "John Doe",
+      "firstname": "John",
+      "lastname": "Doe",
+      "email": "John.Doe@gmail.com",
+      "phone": "(425) 444-1212 x123"
+    },
+    "source": "API",
+    "assigned_to": [],
+    "threads": [
+      {
+        "id": 140,
+        "pid": 0,
+        "thread_id": 87,
+        "type": "M",
+        "typeName": "message",
+        "editor": null,
+        "source": "api",
+        "format": "text",
+        "title": "Testing API",
+        "message": "My original message",
+        "attachmentUrls": [],
+        "timestampes": {
+          "created": "2018-12-30 15:27:05",
+          "updated": "0000-00-00 00:00:00"
+        },
+        "user": {
+          "type": "user",
+          "id": null,
+          "name": "John Doe"
+        }
+      }
+    ]
+  }
+]
+
+Get Ticket
+GET /api/tickets.json/784332
 
 params:
 
@@ -761,7 +1347,7 @@ Status: OK (200)
 Response:
 
 {
-  "ticket_number": "630051",
+  "id": "784332",
   "subject": "Testing API",
   "topic": {
     "id": 2,
@@ -777,26 +1363,26 @@ Response:
   },
   "department": "Support",
   "timestamps": {
-    "create": "2018-12-25 17:47:42",
-    "due": "2018-12-27 17:47:44",
-    "close": "2018-12-25 17:47:44",
-    "last_message": "2018-12-25 17:47:45",
+    "create": "2018-12-30 15:27:05",
+    "due": "2019-01-01 15:27:05",
+    "close": null,
+    "last_message": "2018-12-30 15:27:08",
     "last_response": null
   },
   "user": {
-    "fullname": "john doe",
-    "firstname": "john",
-    "lastname": "doe",
-    "email": "johndoe66710@apitester.com",
+    "fullname": "John Doe",
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "John.Doe@gmail.com",
     "phone": "(425) 444-1212 x123"
   },
   "source": "API",
   "assigned_to": [],
   "threads": [
     {
-      "id": 40,
+      "id": 139,
       "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -806,63 +1392,19 @@ Response:
       "message": "My original message",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:42",
+        "created": "2018-12-30 15:27:05",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
+        "name": "John Doe"
       }
     },
     {
-      "id": 42,
+      "id": 141,
       "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:43",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
-      }
-    },
-    {
-      "id": 43,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:44",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
-      }
-    },
-    {
-      "id": 44,
-      "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -872,19 +1414,19 @@ Response:
       "message": "My updated message using email",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:45",
+        "created": "2018-12-30 15:27:08",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
+        "name": "John Doe"
       }
     },
     {
-      "id": 45,
+      "id": 142,
       "pid": 0,
-      "thread_id": 16,
+      "thread_id": 86,
       "type": "M",
       "typeName": "message",
       "editor": null,
@@ -894,172 +1436,42 @@ Response:
       "message": "My updated message using userId",
       "attachmentUrls": [],
       "timestampes": {
-        "created": "2018-12-25 17:47:45",
+        "created": "2018-12-30 15:27:08",
         "updated": "0000-00-00 00:00:00"
       },
       "user": {
         "type": "user",
         "id": null,
-        "name": "john doe"
+        "name": "John Doe"
       }
     }
   ]
 }
 
-Get Ticket using ticket ID and user Id
-GET /api/tickets.json/630051
+Delete user
+DELETE /api/scp/users.json/104
 
 params:
 
 null
-Status: OK (200)
+Status: No Content (204)
+
+Response:
+
+null
+
+Get Ticket with invalid ID
+GET /api/tickets.json/784332
+
+params:
+
+null
+Status: Bad Request (400)
 
 Response:
 
 {
-  "ticket_number": "630051",
-  "subject": "Testing API",
-  "topic": {
-    "id": 2,
-    "name": "Feedback"
-  },
-  "status": {
-    "id": 1,
-    "name": "Open"
-  },
-  "priority": {
-    "id": 1,
-    "name": "low"
-  },
-  "department": "Support",
-  "timestamps": {
-    "create": "2018-12-25 17:47:42",
-    "due": "2018-12-27 17:47:44",
-    "close": "2018-12-25 17:47:44",
-    "last_message": "2018-12-25 17:47:45",
-    "last_response": null
-  },
-  "user": {
-    "fullname": "john doe",
-    "firstname": "john",
-    "lastname": "doe",
-    "email": "johndoe66710@apitester.com",
-    "phone": "(425) 444-1212 x123"
-  },
-  "source": "API",
-  "assigned_to": [],
-  "threads": [
-    {
-      "id": 40,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "M",
-      "typeName": "message",
-      "editor": null,
-      "source": "api",
-      "format": "text",
-      "title": "Testing API",
-      "message": "My original message",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:42",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "user",
-        "id": null,
-        "name": "john doe"
-      }
-    },
-    {
-      "id": 42,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:43",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
-      }
-    },
-    {
-      "id": 43,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "N",
-      "typeName": "note",
-      "editor": null,
-      "source": "",
-      "format": "html",
-      "title": "Status Changed",
-      "message": "Closed by user",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:44",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "system",
-        "id": null,
-        "name": null
-      }
-    },
-    {
-      "id": 44,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "M",
-      "typeName": "message",
-      "editor": null,
-      "source": "",
-      "format": "text",
-      "title": null,
-      "message": "My updated message using email",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:45",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "user",
-        "id": null,
-        "name": "john doe"
-      }
-    },
-    {
-      "id": 45,
-      "pid": 0,
-      "thread_id": 16,
-      "type": "M",
-      "typeName": "message",
-      "editor": null,
-      "source": "",
-      "format": "text",
-      "title": null,
-      "message": "My updated message using userId",
-      "attachmentUrls": [],
-      "timestampes": {
-        "created": "2018-12-25 17:47:45",
-        "updated": "0000-00-00 00:00:00"
-      },
-      "user": {
-        "type": "user",
-        "id": null,
-        "name": "john doe"
-      }
-    }
-  ]
+  "message": "Ticket Number '784332' does not exist"
 }
 
 Get Topics
@@ -1090,4 +1502,5 @@ Response:
     "value": "Report a Problem / Access Issue"
   }
 ]
+
 ```

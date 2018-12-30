@@ -96,7 +96,7 @@ class TicketApiController extends ApiController {
     }
 
 
-    function create($format) {
+    public function create($format) {
 
         if(!($key=$this->requireApiKey()) || !$key->canCreateTickets())
             return $this->exerr(401, __('API key not authorized'));
@@ -135,7 +135,10 @@ class TicketApiController extends ApiController {
         if(isset($_GET['status_id'])) {
             $filter['status_id']=$_GET['status_id'];
         }
-        $tickets = Ticket::objects()->filter($filter)->all();
+        $tickets = [];
+        foreach(Ticket::objects()->filter($filter)->all() as $ticket) {
+            $tickets[]=$ticket->getTicketApiEntity();
+        }
         $this->response(200, json_encode($tickets));
     }
 
