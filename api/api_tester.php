@@ -1,7 +1,10 @@
 <?php
 session_start();
+$orgNamePostfix=$_SESSION['orgNamePostfix']??rand(0,99999);
 $emailPostfix=$_SESSION['emailPostfix']??rand(0,99999);
+$_SESSION['orgNamePostfix']=$orgNamePostfix+1;
 $_SESSION['emailPostfix']=$emailPostfix+1;
+$orgName="Org Name {$orgNamePostfix}";
 $email="johndoe{$emailPostfix}@apitester.com";
 //$email="johndoe137@apitester.com";
 ?>
@@ -16,10 +19,12 @@ $email="johndoe{$emailPostfix}@apitester.com";
             <ol id='output'></ol>
         </div>
         <script>
-            var email='<?php echo($email);?>',
+            var orgName='<?php echo($orgName);?>',
+            email='<?php echo($email);?>',
             staffUserName='Michael',
+            orgId,  //=112,             //Optional, else newly created user will be used for future tests.
             userId, //=112,             //Optional, else newly created user will be used for future tests.
-            ticketNumber,   //=143514,   //Optional, else newly created ticket will be used for future tests.
+            ticketNumber,   //=143514,  //Optional, else newly created ticket will be used for future tests.
             api='E5C00E92AC5D5EF8706E79201F6A0AAF';
 
             var output=document.getElementById('output');
@@ -51,11 +56,28 @@ $email="johndoe{$emailPostfix}@apitester.com";
             function startTest() {
                 //user endpoints
                 //Create first in this test so that new user can be used in future tests.
+                var orgData={
+                    name: orgName,
+                    phone: '4254441212X123',
+                    notes: 'Mynotes',
+                    website: 'website.com',
+                };
+                var org=testApi('Create Organization', 'POST', '/api/scp/organizations.json', orgData);
+                if(!orgId) {
+                    if (typeof org.id === 'undefined') {
+                        return 'org was not created';
+                    }
+                    orgId=org.id;
+                }
+
+                testApi('Get Organization', 'GET', '/api/scp/organizations.json/'+orgId);
+
                 var userData={
+                    email: email,
+                    org_id: orgId,
                     phone: '4254441212X123',
                     notes: 'Mynotes',
                     name: 'john doe',
-                    email: email,
                     password: 'thepassword',
                     timezone: 'America/Los_Angeles',
                 };
@@ -66,6 +88,11 @@ $email="johndoe{$emailPostfix}@apitester.com";
                     }
                     userId=user.id;
                 }
+
+                userData.email='2_'+userData.email;
+                testApi('Create Second User', 'POST', '/api/scp/users.json', userData);
+
+                testApi('Get User', 'GET', '/api/scp/users.json/'+userId);
 
                 //ticket endpoints
                 //Create first in this test so that new ticket can be used in future tests.
@@ -97,7 +124,8 @@ $email="johndoe{$emailPostfix}@apitester.com";
                 testApi('Get Ticket using ticket ID and user email', 'GET', '/api/tickets.json/'+ticketNumber);
                 testApi('Get Ticket using ticket ID and user Id', 'GET', '/api/tickets.json/'+ticketNumber);
                 testApi('Get Topics', 'GET', '/api/topics.json');
-                testApi('DELETE User', 'DELETE', '/api/scp/users.json/'+userId);
+                testApi('Delete User', 'DELETE', '/api/scp/users.json/'+userId);
+                testApi('Delete Organization', 'DELETE', '/api/scp/organizations.json/'+orgId);
 
             }
 

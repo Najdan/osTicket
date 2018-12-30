@@ -32,11 +32,19 @@ $dispatcher = patterns('',
         url_put("^/tickets\.(?P<format>xml|json)/(?P<tid>\d+)$", array('api.tickets.php:TicketApiController','updateTicket')),
         url_delete("^/tickets\.(?P<format>xml|json)/(?P<tid>\d+)$", array('api.tickets.php:TicketApiController','closeTicket')),
         url_post("^/tickets/reply\.(?P<format>json)$", array('api.tickets.php:TicketApiController','postReply')),
+
+        //Added Topics Endpoints
         url_get("^/topics\.(?P<format>xml|json)", array('api.tickets.php:TicketApiController','getTopics')),
 
         //Added User Endpoints
+        url_get("^/scp/users\.(?P<format>xml|json)/(?P<uid>\d+)$", array('api.users.php:UserApiController','get')),
         url_post("^/scp/users\.(?P<format>xml|json)$", array('api.users.php:UserApiController','create')),
         url_delete("^/scp/users\.(?P<format>xml|json)/(?P<uid>\d+)$", array('api.users.php:UserApiController','delete')),
+
+        //Added Organization Endpoints
+        url_get("^/scp/organizations\.(?P<format>xml|json)/(?P<uid>\d+)$", array('api.organizations.php:OrganizationApiController','get')),
+        url_post("^/scp/organizations\.(?P<format>xml|json)$", array('api.organizations.php:OrganizationApiController','create')),
+        url_delete("^/scp/organizations\.(?P<format>xml|json)/(?P<uid>\d+)$", array('api.organizations.php:OrganizationApiController','delete')),
 
         url('^/tasks/', patterns('',
                 url_post("^cron$", array('api.cron.php:CronApiController', 'execute'))

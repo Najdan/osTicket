@@ -90,10 +90,22 @@ class API {
     function canViewTopics() {
         return true;
     }
+    function canViewUser() {
+        return true;
+    }
     function canAddUser() {
         return true;
     }
     function canDeleteUser() {
+        return true;
+    }
+    function canViewOrganization() {
+        return true;
+    }
+    function canAddOrganization() {
+        return true;
+    }
+    function canDeleteOrganization() {
         return true;
     }
 
