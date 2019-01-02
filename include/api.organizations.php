@@ -48,7 +48,7 @@ class OrganizationApiController extends ApiController {
             return $this->exerr(401, __('API key not authorized'));
         // Organization::objects()->filter(['id__in' => [$oid]])
         if(!$org = Organization::lookup($oid))
-            return $this->exerr(400, __("Organization ID '$oid' does not exist"));
+            return $this->exerr(422, __("Organization ID '$oid' does not exist"));
         if(!empty($_GET['deleteUsers'])) {  //delete users before deleting organization
             foreach ($org->allMembers() as $user) {
                 $user->delete();

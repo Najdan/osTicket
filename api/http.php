@@ -54,6 +54,7 @@ $dispatcher = patterns('',
 Signal::send('api', $dispatcher);
 
 //Change to only add staff for /scp API endpoints.  Needed to change ticket status so that user can be deleted.
+//Need to change this approach as it change's the user's session!
 $thisstaff = new ApiUser();
 
 # Call the respective function

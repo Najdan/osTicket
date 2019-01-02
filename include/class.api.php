@@ -327,7 +327,6 @@ class ApiController {
     function exerr($code, $error='') {
         global $ost;
 
-        $errors=(array)$error;
         if($error && is_array($error))
             $error = Format::array_implode(": ", "\n", $error);
 
@@ -341,7 +340,7 @@ class ApiController {
             fwrite(STDERR, "({$code}) $error\n");
         }
         else {
-            $this->response($code, json_encode(['message'=>implode(', ',$errors)])); //Responder should exit...
+            $this->response($code, $error); //Responder should exit...
         }
         return false;
     }

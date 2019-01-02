@@ -9,7 +9,7 @@
             <ol id='output'></ol>
         </div>
         <script>
-            var api='E5C00E92AC5D5EF8706E79201F6A0AAF';
+            var api='FAD5FF9481ED3C66BB8F33CF3AAB0C26';
 
             function testApi(test, method, url, data) {
                 var msg='<h4>'+test+'</h4><p>'+method+' '+url+'</p><p>params:</p><pre><code>'+(data?JSON.stringify(data, null, 2):null)+'</code></pre>';
